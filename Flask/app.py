@@ -1,10 +1,10 @@
-from flask import Flask,redirect,url_for
+from flask import Flask,redirect,url_for,render_template
 
 app = Flask(__name__)
 
 @app.route("/home")
 def home():
-    return "Hello"
+    return render_template("index.html")
 
 @app.route("/<name>")
 def user(name):
