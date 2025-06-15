@@ -1,11 +1,28 @@
 from flask import Flask,redirect,url_for,render_template,request,session,flash
 from datetime import timedelta
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 # Secret key for decripting
 app.secret_key = "akhona"
+
+# Database cofigurations
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlits3'  #"users" is the name of the table
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Using permanent time ,am able to set a session timer
 app.permanent_session_lifetime = timedelta(minutes=5)
+
+db = SQLAlchemy(app)
+
+# Model to store information in
+class users(db.Model): #db inheritense
+    _id = db.Column("id",db.Integer,primary_key=True)
+    name = db.Column(db.String(100))#Amount of chars
+    email = db.Column(db.String(100))
+
+    def __int__(self,name,email):
+        self.name = name
+        self.email = email
 
 @app.route("/")
 def home():
@@ -34,10 +51,19 @@ def login():
         
         return render_template("login.html")
 
-@app.route("/user")
+@app.route("/user" ,methods=["POST","GET"])
 def user():
+    email=None
     if "user" in session:
         user = session["user"]
+
+        if request.method == "POST":
+            email = request.form["email"]
+            session["email"] = email
+        else:
+            if "email" in session:
+                email = session["email"]
+
         return render_template("user.html",user=user)
     else:
         flash("You are not loged in!")
@@ -48,8 +74,10 @@ def logout():
     # Info from a previous page onto another  e.g Message you recieve After loging out succesfully
     flash("You are logged out!","info")   #Second paremeter has 3 catagories info,warning,error
     session.pop("user",None)   
+    session.pop("email",None)
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
+    db.create_all()
     app.run(debug=True)
 
