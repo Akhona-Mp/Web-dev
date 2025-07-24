@@ -6,6 +6,8 @@ app = Flask(__name__)
 # Secret key for decripting
 app.secret_key = "akhona"
 
+
+
 # Database cofigurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'  #"users" is the name of the table
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
