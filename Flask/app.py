@@ -7,7 +7,6 @@ app = Flask(__name__)
 app.secret_key = "akhona"
 
 
-
 # Database cofigurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'  #"users" is the name of the table
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -35,6 +34,11 @@ def home():
 @app.route("/admin")
 def admin():
     return redirect(url_for("home"))
+
+@app.route("/view")
+def view():
+    return render_template("view.html", values=users.query.all())
+
 
 @app.route("/login", methods=["POST","GET"])
 def login():
