@@ -2,7 +2,7 @@
 <head>
     <title>{% block title %} {% endblock %} </title>
 <!-- Grab url for the specific url file (python code grabs the url for the static folder with the css file)-->
-    <link rel="stylesheet" type="test/css" href="{{ url_for('static', filename='style.css')}}">
+    <link rel="stylesheet" type="test/css" href="{{ url_for('static', filename='styles/style.css')}}">
 </head>
 <body>
     {% block content %}
