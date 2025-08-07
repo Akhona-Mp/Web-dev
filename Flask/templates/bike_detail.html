@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ bike.name }} Details{% endblock %}
+{% block content %}
+    <div class="bike-detail">
+    <h1>{{ bike.name }}</h1>
+    <img src="{{ url_for('static', filename='images/' yamaha_r6.jpeg.image) }}" alt="{{ bike.name }}" style="width: 400px; height: auto; border-radius: 10px;">
+    
+    <ul>
+        <li><strong>Brand:</strong> {{ bike.brand }}</li>
+        <li><strong>Year:</strong> {{ bike.year }}</li>
+        <li><strong>Category:</strong> {{ bike.category }}</li>
+        <li><strong>Price:</strong> R{{ bike.price }}</li>
+    </ul>
+
+    <p><strong>Description:</strong></p>
+    <p>{{ bike.description }}</p>
+
+    <a href="{{ url_for('list_bikes') }}" class="btn">← Back to Bikes</a>
+</div>
+
+{% endblock %}
