@@ -2,80 +2,152 @@ from flask import Flask, redirect, url_for, render_template, request, session, f
 from datetime import timedelta
 from flask_sqlalchemy import SQLAlchemy
 
+# Initialize Flask application
 app = Flask(__name__)
-# Secret key for decripting
+
+# Secret key used for encrypting session data
 app.secret_key = "akhona"
 
-
-# Database cofigurations
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'  #"users" is the name of the table
+# Database configurations
+# SQLite database named "users.sqlite3" will be created/used
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'
+# Disable modification tracking to save memory
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# Using permanent time ,am able to set a session timer
+# Session timeout (user stays logged in for 5 minutes if inactive)
 app.permanent_session_lifetime = timedelta(minutes=5)
 
+# Initialize SQLAlchemy for database handling
 db = SQLAlchemy(app)
 
-# Model to store information in
-class users(db.Model): #db inheritense
-    _id = db.Column("id",db.Integer,primary_key=True)
-    name = db.Column(db.String(100))#Amount of chars
+
+class users(db.Model):
+    """
+    Database model for storing user information.
+
+    Attributes:
+        _id (int): Primary key (unique identifier for each user).
+        name (str): Username (up to 100 characters).
+        email (str): User email address (up to 100 characters).
+    """
+    _id = db.Column("id", db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
     email = db.Column(db.String(100))
 
     def __init__(self, name, email):
+        """
+        Constructor for creating a new user instance.
+
+        Args:
+            name (str): Username.
+            email (str): User's email address.
+        """
         self.name = name
         self.email = email
 
+
 @app.route("/")
 def home():
+    """
+    Render the home page.
+
+    Returns:
+        HTML template for the index page.
+    """
     return render_template("index.html")
 
-#Allow for redirecting instead of a 404!,takes you back to the homepage.
-#E.g "url/admin" ,this will take you to the home page 
+
 @app.route("/admin")
 def admin():
+    """
+    Redirect admin route to home page instead of returning 404.
+
+    Returns:
+        Redirect to home page.
+    """
     return redirect(url_for("home"))
+
 
 @app.route("/view")
 def view():
+    """
+    Display all users stored in the database.
+
+    Returns:
+        HTML template displaying all user records.
+    """
     return render_template("view.html", values=users.query.all())
 
 
-@app.route("/login", methods=["POST","GET"])
+@app.route("/login", methods=["POST", "GET"])
 def login():
+    """
+    Handle user login functionality.
+
+    POST:
+        - Get username from form.
+        - Store user in session.
+        - If user exists, load email from database.
+        - If not, create new user in database.
+        - Flash success message and redirect to /user page.
+
+    GET:
+        - If user already logged in, flash message and redirect to /user page.
+        - Otherwise, render login page.
+
+    Returns:
+        Redirects or renders login template.
+    """
     if request.method == "POST":
         session.permanent = True
         user = request.form["nm"]
-        
-        # Sessions this store data about the user in the for of a dic
+
+        # Save username in session
         session["user"] = user
 
+        # Check if user exists in database
         found_user = users.query.filter_by(name=user).first()
-        if found_user :
+        if found_user:
             session["email"] = found_user.email
         else:
+            # Create new user with empty email
             usr = users(user, "")
-            #Add user to data base
-            db.session.add(usr)     #Stages the adding of usrs
-            db.session.commit()             #This is to finalize the adding of users
+            db.session.add(usr)      # Stage user for addition
+            db.session.commit()      # Commit changes to DB
 
-        flash("You have succesfully loged in!")
+        flash("You have successfully logged in!")
         return redirect(url_for("user"))
     else:
         if "user" in session:
-            flash("Already loged in!")
+            flash("Already logged in!")
             return redirect(url_for("user"))
-        
+
         return render_template("login.html")
 
-@app.route("/user" ,methods=["POST","GET"])
+
+@app.route("/user", methods=["POST", "GET"])
 def user():
-    email=None
+    """
+    Handle user profile page.
+
+    POST:
+        - Save/update user's email in database.
+        - Flash success message.
+
+    GET:
+        - Display user profile with email if available.
+
+    Returns:
+        Render user profile page or redirect to login.
+    """
+    email = None
     if "user" in session:
         user = session["user"]
 
         if request.method == "POST":
             email = request.form["email"]
             session["email"] = email
+
+            # Update user email in database
             found_user = users.query.filter_by(name=user).first()
             found_user.email = email
             db.session.commit()
@@ -84,21 +156,32 @@ def user():
             if "email" in session:
                 email = session["email"]
 
-        return render_template("user.html",user=user)
+        return render_template("user.html", user=user)
     else:
-        flash("You are not loged in!")
+        flash("You are not logged in!")
         return redirect(url_for("login"))
+
 
 @app.route("/logout")
 def logout():
-    # Info from a previous page onto another  e.g Message you recieve After loging out succesfully
-    flash("You are logged out!","info")   #Second paremeter has 3 catagories info,warning,error
-    session.pop("user",None)   
-    session.pop("email",None)
+    """
+    Log out the current user.
+
+    - Clear user and email from session.
+    - Flash logout confirmation.
+    - Redirect to login page.
+
+    Returns:
+        Redirect to login page.
+    """
+    flash("You are logged out!", "info")
+    session.pop("user", None)
+    session.pop("email", None)
     return redirect(url_for("login"))
 
+
 if __name__ == "__main__":
+    # Ensure database tables are created before running app
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host="0.0.0.0",port=7000)
-
+    app.run(debug=True, host="0.0.0.0", port=7000)
