@@ -15,6 +15,7 @@ app.permanent_session_lifetime = timedelta(minutes=5)
 
 db = SQLAlchemy(app)
 
+
 # Model to store information in
 class users(db.Model): #db inheritense
     _id = db.Column("id",db.Integer,primary_key=True)
