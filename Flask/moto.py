@@ -35,7 +35,7 @@ def close_connection(exception):
 
 
 # --------------------------
-#  Route to Bike Details
+#   Route to Bike Details
 # --------------------------
 @app.route("/bikes/<int:bike_id>")
 def bike_detail(bike_id):
